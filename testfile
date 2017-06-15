@@ -1,1 +1,12 @@
 
+
+
+
+**** Calculating the Goertzell coeff, only once for sampling_frequency,target frequency and number of samples ****
+Sub Dogrtz
+	Dim k As Int : Dim omega As Float
+	grtz_sampling_freq=8000 : target_freq=500 :grtz_nr_sampl=32 
+	k = (0.5 + ((grtz_nr_sampl * target_freq) / grtz_sampling_freq)) 
+	omega = (2.0 * pi * k) / grtz_nr_sampl'pi *
+	cosines = Cos(omega) : coeff = 2.0 * cosines
+End sub	
