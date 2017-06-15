@@ -1,1 +1,50 @@
+**** Global Variables                                          ****
+Dim magnitude As Int
+Dim magnitudelimit As Int = 120
+Dim MAGNITUDELIMIT_LOW As Int = 100
+Dim LOW As String = "0"
+Dim HIGH As String = "1"
+Dim realstate As String = LOW     'HIGH/LOW
+Dim realstatebefore As String = LOW 'HIGH/LOW	
+Dim filteredstate As String = LOW 'HIGH/LOW
+Dim filteredstatebefore As String = LOW 'HIGH/LOW
 
+Dim  coeff As Float
+Dim  Q1 = 0 As Float
+Dim  Q2 = 0 As Float
+Dim cosines As Float
+Dim grtz_sampling_freq
+Dim target_freq
+Dim grtz_nr_sampl
+
+Dim nbtime As Int = 6 ' ms noise blanker
+
+Dim starttimehigh As Long
+Dim highduration As Long
+Dim lasthighduration As Long
+Dim hightimesavg As Long
+Dim lowtimesavg As Long
+Dim startttimelow As Long
+Dim lowduration As Long
+Dim laststarttime  As Long = 0
+	
+Dim code  As String
+Dim letter As String
+Dim space As Boolean
+Dim new_char_available As Boolean
+Dim letters_length As Int =1
+	
+Dim stop As String  = LOW 'HIGH/LOW
+Dim wpm As Int
+Dim pi As Int = 3.14159
+
+**** Calculating the Goertzell coeff, only once for             ****
+**** sampling_frequency ,target frequency and number of samples ****
+**** Now the coeff can be used in the decoding algoritme        ****                          
+Sub Dogrtz
+	Dim k As Int : Dim omega As Float
+	grtz_sampling_freq=8000 : target_freq=500 :grtz_nr_sampl=32 
+	k = (0.5 + ((grtz_nr_sampl * target_freq) / grtz_sampling_freq)) 
+	omega = (2.0 * pi * k) / grtz_nr_sampl'pi *
+	cosines = Cos(omega) : coeff = 2.0 * cosines
+End sub 
