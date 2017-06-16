@@ -13,4 +13,5 @@ an Android device.
 See all the comments from Hjalmar on his code how
 this decoding is done.
 
+The Arduino C code is converted into B4A code.
 For Android the Nano timer is used and it seems to work.
