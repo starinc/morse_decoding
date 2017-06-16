@@ -61,7 +61,6 @@ Sub Morse_decode
 	
 	
 	Dogrtz
-    Wait(1000)
 	Do While test <> 1 
 	
 		If Record.IsInterrupted Then Exit
