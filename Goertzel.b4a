@@ -48,3 +48,139 @@ Sub Dogrtz
 	omega = (2.0 * pi * k) / grtz_nr_sampl'pi *
 	cosines = Cos(omega) : coeff = 2.0 * cosines
 End sub 
+
+
+**** Decoding sub android  with  millis.NanoTime timer          ****
+
+Sub Morse_decode
+	If ar.GetRecordingState = 3 Then Log("FreqDetect State = Start Recording")
+	Dim sound(ar_buf_size) As Short
+	Dim test,i As Int
+	Dim Q0,magnitudesquared,lacktime As Float
+	MAGNITUDELIMIT_LOW=100
+	
+	
+	Dogrtz
+    Wait(1000)
+	Do While test <> 1 
+	
+		If Record.IsInterrupted Then Exit
+		
+		'*** HERE WE GET THE TONE ***
+		sound = ar.Readshort(0,grtz_nr_sampl)
+		For i = 0 To grtz_nr_sampl - 1
+			Q0 = coeff * Q1 - Q2 + sound(i)
+			Q2 = Q1
+			Q1 = Q0
+		Next
+		magnitudesquared = (Q1*Q1)+(Q2*Q2)-Q1*Q2*coeff '
+		magnitude = Sqrt(magnitudesquared)
+		Q2 = 0 : Q1 = 0
+		If (magnitude > MAGNITUDELIMIT_LOW) Then
+			magnitudelimit = (magnitudelimit + ((magnitude - magnitudelimit)/6))'
+		End If
+		
+		If (magnitudelimit < MAGNITUDELIMIT_LOW) Then magnitudelimit = MAGNITUDELIMIT_LOW
+
+		If(magnitude > magnitudelimit*1) Then 
+	        realstate = HIGH
+		Else
+			realstate = LOW
+		End If
+
+                '*** Decoding          ***
+		If (realstate <> realstatebefore) Then
+			laststarttime = millis.NanoTime
+		End If
+		'
+		If ((millis.NanoTime-laststarttime) > 6000000) Then '6ms
+			If (realstate <> filteredstate) Then
+				filteredstate = realstate
+			End If
+		End If
+			
+		
+		If (filteredstate <> filteredstatebefore)Then
+			If (filteredstate = HIGH) Then
+				starttimehigh = millis.NanoTime
+				lowduration = (millis.NanoTime - startttimelow) 
+		
+			End If
+	   
+			If (filteredstate = LOW) Then
+				startttimelow = millis.NanoTime
+				highduration = (millis.NanoTime - starttimehigh) 
+			
+				If (highduration < (2*hightimesavg) Or hightimesavg = 0) Then
+					hightimesavg = (highduration + hightimesavg + hightimesavg)/3
+					
+				End If
+				If (highduration > (5*hightimesavg) ) Then
+					hightimesavg = highduration+hightimesavg 
+				End If
+			End If
+		End If
+		
+	
+		If (filteredstate <>  filteredstatebefore) Then
+			stop = LOW
+			If (filteredstate = LOW) Then ' 
+				If (highduration < (hightimesavg*2) And highduration > (hightimesavg*0.6)) Then
+				
+					code = code & (".")
+					'Log(".")
+				End If
+	 
+				If (highduration > (hightimesavg*2) And highduration < (hightimesavg*6)) Then
+					
+					code=code & ("-")
+					'Log("-")
+	
+					wpm = (wpm + (1200/((highduration/1000000)/3)))/2 
+				
+				End If
+			End If
+	  
+			If (filteredstate = HIGH) Then 
+				lacktime = 1
+				If(wpm > 25) Then lacktime=1.0 
+				If(wpm > 30) Then lacktime=1.2 
+				If(wpm > 35) Then lacktime=1.5 
+				If(wpm > 40) Then lacktime=1.8 
+				If(wpm > 45) Then lacktime=1.8 
+
+				'// letter space
+				If (lowduration > (hightimesavg*(2*lacktime)) And lowduration < hightimesavg*(5*lacktime)) Then
+					docode
+					code ="" 
+					'Log("/")
+				End If
+	  
+				'// word space
+				If (lowduration >= hightimesavg*(5*lacktime)) Then '// word space
+					docode
+					code =""
+					space =True
+					Log(" ")
+		
+				End If
+			End If
+		End If
+
+		
+		
+		If ((millis.NanoTime - startttimelow) > (highduration * 6) And stop = LOW) Then
+			
+			stop = HIGH
+		End If
+		
+	
+		realstatebefore = realstate
+		lasthighduration = highduration
+		filteredstatebefore = filteredstate
+	 Loop
+End Sub
+
+
+
+
